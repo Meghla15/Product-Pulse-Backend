@@ -28,11 +28,22 @@ async function run() {
     await client.connect();
 
     const allCollection = client.db('ProductPulse').collection('allData')
-
+    
+    // get all data
     app.get('/allData', async(req, res)=>{
         const result = await allCollection.find().toArray();
         res.send(result)
     })
+
+    // search option
+    app.get("/search", async (req, res) => {
+        const search = req.query.search;
+        let query = {
+          product_name: { $regex: search, $options: "i" },
+        };
+        const result = await allCollection.find(query).toArray();
+        res.send(result);
+      });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
