@@ -1,17 +1,15 @@
-const express = require('express')
-const cors = require('cors')
+const express = require('express');
+const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
-require('dotenv').config()
-const app = express()
+require('dotenv').config();
+const app = express();
 const port = process.env.PORT || 5000;
 
-// middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-
-
-const uri =`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wcqculy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wcqculy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -24,26 +22,51 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
+    // Connect the client to the server (optional starting in v4.7)
     await client.connect();
 
-    const allCollection = client.db('ProductPulse').collection('allData')
-    
-    // get all data
-    app.get('/allData', async(req, res)=>{
-        const result = await allCollection.find().toArray();
-        res.send(result)
-    })
+    const allCollection = client.db('ProductPulse').collection('allData');
 
-    // search option
+    // Get all data with pagination
+    app.get('/allData', async (req, res) => {
+      const page = parseInt(req.query.page) || 1; // Default to page 1
+      const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
+      const skip = (page - 1) * limit;
+
+      try {
+        const totalItems = await allCollection.countDocuments(); // Get total number of items
+        const totalPages = Math.ceil(totalItems / limit); // Calculate total pages
+
+        const items = await allCollection.find()
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+
+        res.json({
+          totalItems,
+          totalPages,
+          currentPage: page,
+          items
+        });
+      } catch (error) {
+        res.status(500).send("Internal Server Error");
+      }
+    });
+
+    // Search option
     app.get("/search", async (req, res) => {
-        const search = req.query.search;
-        let query = {
-          product_name: { $regex: search, $options: "i" },
-        };
+      const search = req.query.search;
+      let query = {
+        product_name: { $regex: search, $options: "i" },
+      };
+      try {
         const result = await allCollection.find(query).toArray();
         res.send(result);
-      });
+      } catch (error) {
+        res.status(500).send("Internal Server Error");
+      }
+    });
+
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
@@ -52,11 +75,10 @@ async function run() {
 }
 run().catch(console.dir);
 
+app.get('/', (req, res) => {
+  res.send('Server is running');
+});
 
-app.get('/', (req,res)=>{
-    res.send('server is running')
-})
-
-app.listen(port, ()=>{
-    console.log(`server is running on port ${port}`)
-})
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
