@@ -34,8 +34,8 @@ async function run() {
       const skip = (page - 1) * limit;
 
       try {
-        const totalItems = await allCollection.countDocuments(); // Get total number of items
-        const totalPages = Math.ceil(totalItems / limit); // Calculate total pages
+        const totalItems = await allCollection.countDocuments(); 
+        const totalPages = Math.ceil(totalItems / limit); 
 
         const items = await allCollection.find()
           .skip(skip)
@@ -88,8 +88,6 @@ async function run() {
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
   }
 }
 run().catch(console.dir);
