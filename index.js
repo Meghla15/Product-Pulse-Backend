@@ -29,8 +29,8 @@ async function run() {
 
     // Get all data with pagination
     app.get('/allData', async (req, res) => {
-      const page = parseInt(req.query.page) || 1; // Default to page 1
-      const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10; 
       const skip = (page - 1) * limit;
 
       try {
@@ -66,8 +66,8 @@ async function run() {
       };
 
       try {
-        const totalItems = await allCollection.countDocuments(query); // Count documents matching query
-        const totalPages = Math.ceil(totalItems / limit); // Calculate total pages
+        const totalItems = await allCollection.countDocuments(query);
+        const totalPages = Math.ceil(totalItems / limit); 
 
         const items = await allCollection.find(query)
           .skip(skip)
