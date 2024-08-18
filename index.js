@@ -49,20 +49,39 @@ async function run() {
           items
         });
       } catch (error) {
+        console.error("Failed to fetch all data:", error);
         res.status(500).send("Internal Server Error");
       }
     });
 
-    // Search option
+    // Search option with pagination
     app.get("/search", async (req, res) => {
-      const search = req.query.search;
+      const search = req.query.search || "";
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
       let query = {
         product_name: { $regex: search, $options: "i" },
       };
+
       try {
-        const result = await allCollection.find(query).toArray();
-        res.send(result);
+        const totalItems = await allCollection.countDocuments(query); // Count documents matching query
+        const totalPages = Math.ceil(totalItems / limit); // Calculate total pages
+
+        const items = await allCollection.find(query)
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+
+        res.json({
+          totalItems,
+          totalPages,
+          currentPage: page,
+          items
+        });
       } catch (error) {
+        console.error("Failed to search data:", error);
         res.status(500).send("Internal Server Error");
       }
     });
